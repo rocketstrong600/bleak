@@ -77,7 +77,6 @@ class BleakScannerP4Android(BaseBleakScanner):
                 [
                     defs.ACCESS_FINE_LOCATION,
                     defs.ACCESS_COARSE_LOCATION,
-                    defs.ACCESS_BACKGROUND_LOCATION,
                 ],
                 handle_permissions,
             )
