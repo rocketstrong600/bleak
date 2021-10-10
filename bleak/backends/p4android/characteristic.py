@@ -5,6 +5,10 @@ from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.descriptor import BleakGATTDescriptor
 from bleak.exc import BleakError
 
+<<<<<<< HEAD
+=======
+from jnius import autoclass
+>>>>>>> origin/p4a
 
 from . import defs
 
@@ -12,12 +16,19 @@ from . import defs
 class BleakGATTCharacteristicP4Android(BleakGATTCharacteristic):
     """GATT Characteristic implementation for the python-for-android backend"""
 
+<<<<<<< HEAD
     def __init__(self, java, service_uuid: str, service_handle: int):
+=======
+    def __init__(self, java, service_uuid: str):
+>>>>>>> origin/p4a
         super(BleakGATTCharacteristicP4Android, self).__init__(java)
         self.__uuid = self.obj.getUuid().toString()
         self.__handle = self.obj.getInstanceId()
         self.__service_uuid = service_uuid
+<<<<<<< HEAD
         self.__service_handle = service_handle
+=======
+>>>>>>> origin/p4a
         self.__descriptors = []
         self.__notification_descriptor = None
 
@@ -33,11 +44,14 @@ class BleakGATTCharacteristicP4Android(BleakGATTCharacteristic):
         return self.__service_uuid
 
     @property
+<<<<<<< HEAD
     def service_handle(self) -> int:
         """The integer handle of the Service containing this characteristic"""
         return int(self.__service_handle)
 
     @property
+=======
+>>>>>>> origin/p4a
     def handle(self) -> int:
         """The handle of this characteristic"""
         return self.__handle

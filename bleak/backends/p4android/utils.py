@@ -42,23 +42,42 @@ class AsyncJavaCallbacks(PythonJavaClass):
 
         if result2 is not None:
             logger.debug(
+<<<<<<< HEAD
                 f"Not waiting for android api {resultApi} because found {resultExpected}"
             )
         else:
             logger.debug(f"Waiting for android api {resultApi}")
+=======
+                "Not waiting for android api {0} because found {1}".format(
+                    resultApi, resultExpected
+                )
+            )
+        else:
+            logger.debug("Waiting for android api {0}".format(resultApi))
+>>>>>>> origin/p4a
 
             state = self._loop.create_future()
             self.futures[resultApi] = state
             result1 = dispatchApi(*dispatchParams)
             if return_indicates_status and not result1:
                 del self.futures[resultApi]
+<<<<<<< HEAD
                 raise BleakError(f"api call failed, not waiting for {resultApi}")
+=======
+                raise BleakError(
+                    "api call failed, not waiting for {}".format(resultApi)
+                )
+>>>>>>> origin/p4a
             data = await state
             result2 = self._if_expected(data, resultExpected)
             if result2 is None:
                 raise BleakError("Expected", resultExpected, "got", data)
 
+<<<<<<< HEAD
             logger.debug(f"{resultApi} succeeded {result2}")
+=======
+            logger.debug("{0} succeeded {1}".format(resultApi, result2))
+>>>>>>> origin/p4a
 
         if return_indicates_status:
             return result2
@@ -66,7 +85,15 @@ class AsyncJavaCallbacks(PythonJavaClass):
             return (result1, *result2)
 
     def _result_state_unthreadsafe(self, failure_str, source, data):
+<<<<<<< HEAD
         logger.debug(f"Java state transfer {source} error={failure_str} data={data}")
+=======
+        logger.debug(
+            "Java state transfer {0} error={1} data={2}".format(
+                source, failure_str, data
+            )
+        )
+>>>>>>> origin/p4a
         self.states[source] = (failure_str, *data)
         future = self.futures.get(source, None)
         if future is not None and not future.done():
@@ -86,7 +113,13 @@ class AsyncJavaCallbacks(PythonJavaClass):
                 if len(namedfutures):
                     # send it on existing requests
                     for name, future in namedfutures:
+<<<<<<< HEAD
                         warnings.warn(f"Redirecting error without home to {name}")
+=======
+                        warnings.warn(
+                            "Redirecting error without home to {0}".format(name)
+                        )
+>>>>>>> origin/p4a
                         future.set_exception(exception)
                 else:
                     # send it on the event thread

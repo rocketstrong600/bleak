@@ -16,8 +16,16 @@ import asyncio
 from bleak.__version__ import __version__  # noqa
 from bleak.exc import BleakError
 
+
 _on_rtd = os.environ.get("READTHEDOCS") == "True"
+<<<<<<< HEAD
 _on_ci = "CI" in os.environ
+=======
+if os.environ.get("P4A_BOOTSTRAP") is not None:
+    _system = "Python4Android"
+else:
+    _system = platform.system()
+>>>>>>> origin/p4a
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
@@ -29,6 +37,7 @@ if bool(os.environ.get("BLEAK_LOGGING", False)):
     _logger.addHandler(handler)
     _logger.setLevel(logging.DEBUG)
 
+<<<<<<< HEAD
 if _on_rtd:
     pass
 elif os.environ.get("P4A_BOOTSTRAP") is not None:
@@ -40,6 +49,10 @@ elif os.environ.get("P4A_BOOTSTRAP") is not None:
     )  # noqa: F401
 elif platform.system() == "Linux":
     if not _on_ci:
+=======
+if _system == "Linux":
+    if not _on_rtd:
+>>>>>>> origin/p4a
         # TODO: Check if BlueZ version 5.43 is sufficient.
         p = subprocess.Popen(["bluetoothctl", "--version"], stdout=subprocess.PIPE)
         out, _ = p.communicate()
@@ -59,7 +72,14 @@ elif platform.system() == "Linux":
     from bleak.backends.bluezdbus.client import (
         BleakClientBlueZDBus as BleakClient,
     )  # noqa: F401
-elif platform.system() == "Darwin":
+elif _system == "Python4Android":
+    from bleak.backends.p4android.scanner import (
+        BleakScannerP4Android as BleakScanner,
+    )  # noqa: F401
+    from bleak.backends.p4android.client import (
+        BleakClientP4Android as BleakClient,
+    )  # noqa: F401
+elif _system == "Darwin":
     try:
         from CoreBluetooth import CBPeripheral  # noqa: F401
     except Exception as ex:
@@ -72,7 +92,7 @@ elif platform.system() == "Darwin":
         BleakClientCoreBluetooth as BleakClient,
     )  # noqa: F401
 
-elif platform.system() == "Windows":
+elif _system == "Windows":
     # Requires Windows 10 Creators update at least, i.e. Window 10.0.16299
     _vtup = platform.win32_ver()[1].split(".")
     if int(_vtup[0]) != 10:
@@ -95,7 +115,7 @@ elif platform.system() == "Windows":
     )  # noqa: F401
 
 else:
-    raise BleakError(f"Unsupported platform: {platform.system()}")
+    raise BleakError(f"Unsupported platform: {_system}")
 
 # for backward compatibility
 if not _on_rtd:

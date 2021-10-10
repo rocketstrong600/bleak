@@ -26,7 +26,11 @@ class BleakRecipe(PythonRecipe):
     def get_recipe_env(self, arch=None, with_flags_in_cc=True):
         env = super().get_recipe_env(arch, with_flags_in_cc)
         # to find jnius and identify p4a
+<<<<<<< HEAD
         env["PYJNIUS_PACKAGES"] = self.ctx.get_site_packages_dir(arch)
+=======
+        env["PYJNIUS_PACKAGES"] = self.ctx.get_site_packages_dir()
+>>>>>>> origin/p4a
         return env
 
     def postbuild_arch(self, arch):
