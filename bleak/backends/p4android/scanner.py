@@ -10,7 +10,7 @@ from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
 
 from android.broadcast import BroadcastReceiver
-from android.permissions import request_permissions
+from android.permissions import request_permissions, Permission
 from jnius import cast, java_method
 
 from . import defs
@@ -26,16 +26,12 @@ class BleakScannerP4Android(BaseBleakScanner):
     """The python-for-android Bleak BLE Scanner.
 
     Keyword Args:
-        adapter (str): Bluetooth adapter to use for discovery. [ignored]
         filters (dict): A dict of filters to be applied on discovery. [unimplemented]
 
     """
 
     def __init__(self, **kwargs):
         super(BleakScannerP4Android, self).__init__(**kwargs)
-
-        # kwarg "device" is for backwards compatibility
-        self.__adapter = kwargs.get("adapter", kwargs.get("device", None))
 
         self._devices = {}
         self.__javascanner = None
@@ -75,8 +71,8 @@ class BleakScannerP4Android(BaseBleakScanner):
 
             request_permissions(
                 [
-                    defs.ACCESS_FINE_LOCATION,
-                    defs.ACCESS_COARSE_LOCATION,
+                    Permission.ACCESS_FINE_LOCATION,
+                    Permission.ACCESS_COARSE_LOCATION,
                 ],
                 handle_permissions,
             )
@@ -85,7 +81,7 @@ class BleakScannerP4Android(BaseBleakScanner):
             self.__adapter = defs.BluetoothAdapter.getDefaultAdapter()
             if self.__adapter is None:
                 raise BleakError("Bluetooth is not supported on this hardware platform")
-            if self.__adapter.getState() != defs.STATE_ON:
+            if self.__adapter.getState() != defs.BluetoothAdapter.STATE_ON:
                 raise BleakError("Bluetooth is not turned on")
 
             self.__javascanner = self.__adapter.getBluetoothLeScanner()
@@ -136,14 +132,13 @@ class BleakScannerP4Android(BaseBleakScanner):
                 def handlerWaitingForState(state, stateFuture):
                     def handleAdapterStateChanged(context, intent):
                         adapter_state = intent.getIntExtra(
-                            defs.EXTRA_STATE, defs.STATE_ERROR
+                            defs.BluetoothAdapter.EXTRA_STATE,
+                            defs.BluetoothAdapter.STATE_ERROR,
                         )
-                        if adapter_state == defs.STATE_ERROR:
+                        if adapter_state == defs.BluetoothAdapter.STATE_ERROR:
                             loop.call_soon_threadsafe(
                                 stateOffFuture.set_exception,
-                                BleakError(
-                                    "Unexpected adapter state {}".format(adapter_state)
-                                ),
+                                BleakError(f"Unexpected adapter state {adapter_state}"),
                             )
                         elif adapter_state == state:
                             loop.call_soon_threadsafe(
@@ -157,8 +152,10 @@ class BleakScannerP4Android(BaseBleakScanner):
                 )
                 stateOffFuture = loop.create_future()
                 receiver = BroadcastReceiver(
-                    handlerWaitingForState(defs.STATE_OFF, stateOffFuture),
-                    actions=[defs.ACTION_STATE_CHANGED],
+                    handlerWaitingForState(
+                        defs.BluetoothAdapter.STATE_OFF, stateOffFuture
+                    ),
+                    actions=[defs.BluetoothAdapter.ACTION_STATE_CHANGED],
                 )
                 receiver.start()
                 try:
@@ -170,8 +167,10 @@ class BleakScannerP4Android(BaseBleakScanner):
                 logger.info("re-enabling bluetooth adapter ...")
                 stateOnFuture = loop.create_future()
                 receiver = BroadcastReceiver(
-                    handlerWaitingForState(defs.STATE_ON, stateOnFuture),
-                    actions=[defs.ACTION_STATE_CHANGED],
+                    handlerWaitingForState(
+                        defs.BluetoothAdapter.STATE_ON, stateOnFuture
+                    ),
+                    actions=[defs.BluetoothAdapter.ACTION_STATE_CHANGED],
                 )
                 receiver.start()
                 try:
@@ -198,7 +197,8 @@ class BleakScannerP4Android(BaseBleakScanner):
     async def set_scanning_filter(self, **kwargs):
         self._filters = kwargs.get("filters", {})
 
-    async def get_discovered_devices(self) -> List[BLEDevice]:
+    @property
+    def discovered_devices(self) -> List[BLEDevice]:
         return [*self._devices.values()]
 
 
@@ -226,8 +226,7 @@ class _PythonScanCallback(utils.AsyncJavaCallbacks):
         service_uuids = record.getServiceUuids()
         if service_uuids is not None:
             service_uuids = [
-                service_uuids[index].getUuid().toString()
-                for index in range(len(service_uuids))
+                service_uuid.getUuid().toString() for service_uuid in service_uuids
             ]
         manufacturer_data = record.getManufacturerSpecificData()
         manufacturer_data = {

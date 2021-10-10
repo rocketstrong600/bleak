@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from kivy.app import App
 
 # from kivy.core.window import Window
@@ -54,32 +52,30 @@ class ExampleApp(App):
                 scanned_devices.sort(key=lambda device: -device.rssi)
 
                 for device in scanned_devices:
-                    self.line("{0} {1}dB".format(str(device)[:24], device.rssi))
+                    self.line(f"{device.name} {device.rssi}dB")
 
                 for device in scanned_devices:
-                    self.line("Connecting to {0} ...".format(str(device)[:24]))
-                    client = bleak.BleakClient(device.address)
+                    self.line(f"Connecting to {device.name} ...")
                     try:
-                        await client.connect()
-                        services = await client.get_services()
-                        for service in services.services.values():
-                            self.line("  service {0}".format(service.uuid))
-                            for characteristic in service.characteristics:
-                                self.line(
-                                    "  characteristic {0} {1} ({2} descriptors)".format(
-                                        characteristic.uuid,
-                                        hex(characteristic.handle),
-                                        len(characteristic.descriptors),
+                        async with bleak.BleakClient(device) as client:
+                            services = await client.get_services()
+                            for service in services.services.values():
+                                self.line(f"  service {service.uuid}")
+                                for characteristic in service.characteristics:
+                                    self.line(
+                                        f"  characteristic {characteristic.uuid} {hex(characteristic.handle)} ({len(characteristic.descriptors)} descriptors)"
                                     )
-                                )
                     except bleak.exc.BleakError as e:
-                        self.line("  error {0}".format(e))
-                    finally:
-                        await client.disconnect()
+                        self.line(f"  error {e}")
+                        asyncio.sleep(10)
             except bleak.exc.BleakError as e:
-                self.line("ERROR {0}".format(e))
+                self.line(f"ERROR {e}")
                 await asyncio.sleep(1)
         self.line("example loop terminated", True)
+
+
+async def main(app):
+    await asyncio.gather(app.async_run("asyncio"), app.example())
 
 
 if __name__ == "__main__":
@@ -87,9 +83,4 @@ if __name__ == "__main__":
 
     # app running on one thread with two async coroutines
     app = ExampleApp()
-    loop = asyncio.get_event_loop()
-    coroutines = (app.async_run("asyncio"), app.example())
-    firstcompleted = asyncio.wait(coroutines, return_when=asyncio.FIRST_COMPLETED)
-    results, ongoing = loop.run_until_complete(firstcompleted)
-    for result in results:
-        result.result()  # raises exceptions from asyncio.wait
+    asyncio.run(main(app))

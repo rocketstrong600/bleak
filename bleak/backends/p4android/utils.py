@@ -42,27 +42,23 @@ class AsyncJavaCallbacks(PythonJavaClass):
 
         if result2 is not None:
             logger.debug(
-                "Not waiting for android api {0} because found {1}".format(
-                    resultApi, resultExpected
-                )
+                f"Not waiting for android api {resultApi} because found {resultExpected}"
             )
         else:
-            logger.debug("Waiting for android api {0}".format(resultApi))
+            logger.debug(f"Waiting for android api {resultApi}")
 
             state = self._loop.create_future()
             self.futures[resultApi] = state
             result1 = dispatchApi(*dispatchParams)
             if return_indicates_status and not result1:
                 del self.futures[resultApi]
-                raise BleakError(
-                    "api call failed, not waiting for {}".format(resultApi)
-                )
+                raise BleakError(f"api call failed, not waiting for {resultApi}")
             data = await state
             result2 = self._if_expected(data, resultExpected)
             if result2 is None:
                 raise BleakError("Expected", resultExpected, "got", data)
 
-            logger.debug("{0} succeeded {1}".format(resultApi, result2))
+            logger.debug(f"{resultApi} succeeded {result2}")
 
         if return_indicates_status:
             return result2
@@ -70,11 +66,7 @@ class AsyncJavaCallbacks(PythonJavaClass):
             return (result1, *result2)
 
     def _result_state_unthreadsafe(self, failure_str, source, data):
-        logger.debug(
-            "Java state transfer {0} error={1} data={2}".format(
-                source, failure_str, data
-            )
-        )
+        logger.debug(f"Java state transfer {source} error={failure_str} data={data}")
         self.states[source] = (failure_str, *data)
         future = self.futures.get(source, None)
         if future is not None and not future.done():
@@ -94,9 +86,7 @@ class AsyncJavaCallbacks(PythonJavaClass):
                 if len(namedfutures):
                     # send it on existing requests
                     for name, future in namedfutures:
-                        warnings.warn(
-                            "Redirecting error without home to {0}".format(name)
-                        )
+                        warnings.warn(f"Redirecting error without home to {name}")
                         future.set_exception(exception)
                 else:
                     # send it on the event thread
